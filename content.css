@@ -32,7 +32,7 @@
 }
 
 [data-vip-coin-seen] {
-  outline: 2px solid #ff7657 !important;
+  outline: 2px dashed #ff7657 !important;
   outline-offset: 2px !important;
 }
 
