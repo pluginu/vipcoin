@@ -2,24 +2,24 @@
 *{box-sizing:border-box}
 body{width:350px;margin:0;padding:17px;background:#0c1010;color:#f2f5f1}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.eyebrow{color:#e8bb28;font-size:10px;font-weight:800;letter-spacing:.13em}
+.eyebrow{color:#22c55e;font-size:10px;font-weight:800;letter-spacing:.13em}
 h1{margin:1px 0 0;font-size:23px}
 h2{margin:18px 0 2px;font-size:14px}
 .hint,.footnote{color:#8f9b97;font-size:11px}
 .status-card{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .status-card div{display:flex;flex-direction:column;padding:11px;border:1px solid #29322f;border-radius:10px;background:#151b19}
-.status-card strong{font-size:20px;color:#ffe066}
+.status-card strong{font-size:20px;color:#86efac}
 .status-card span{font-size:10px;color:#9ba7a3}
 #status{min-height:18px;margin:8px 1px;color:#aeb8b4;font-size:11px}
 .toggle input{position:absolute;opacity:0}
 .toggle span{display:block;width:42px;height:24px;padding:3px;border-radius:999px;background:#39423f;cursor:pointer}
 .toggle span::after{content:"";display:block;width:18px;height:18px;border-radius:50%;background:white;transition:.18s}
-.toggle input:checked+span{background:#d6a90e}
+.toggle input:checked+span{background:#22c55e}
 .toggle input:checked+span::after{transform:translateX(18px)}
 form{display:grid;gap:7px;margin:10px 0}
 input,select{min-width:0;width:100%;padding:9px 10px;border:1px solid #37413e;border-radius:8px;background:#171d1b;color:white;outline:none}
-input:focus,select:focus{border-color:#d6a90e}
-button{border:0;border-radius:8px;padding:9px 12px;background:#e4b916;color:#1e1800;font:700 12px system-ui;cursor:pointer;text-align:center}
+input:focus,select:focus{border-color:#22c55e}
+button{border:0;border-radius:8px;padding:9px 12px;background:#22c55e;color:#04150a;font:700 12px system-ui;cursor:pointer;text-align:center}
 .secondary{background:#242c29;color:#dce3df;border:1px solid #39433f}
 ul{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin:0;padding:0;list-style:none}
 li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:7px 9px;border-radius:7px;background:#161d1b;color:#cfeef5}
@@ -47,12 +47,12 @@ li button{padding:2px 6px;background:transparent;color:#8d9995;font-size:17px}
 .load-progress{margin:12px 0;padding:11px;border:1px solid #29322f;border-radius:10px;background:#151b19}
 .progress-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px}
 #progress-label{font-weight:500;color:#cbd5d0}
-#progress-value{color:#ffe066;white-space:nowrap;font-size:10px}
-#load-progress{display:block;width:100%;height:6px;margin:10px 0;accent-color:#e4b916;border:0;border-radius:99px;overflow:hidden;background:#29322f}
+#progress-value{color:#86efac;white-space:nowrap;font-size:10px}
+#load-progress{display:block;width:100%;height:6px;margin:10px 0;accent-color:#22c55e;border:0;border-radius:99px;overflow:hidden;background:#29322f}
 #load-progress::-webkit-progress-bar{background:#29322f;border-radius:99px}
-#load-progress::-webkit-progress-value{background:#e4b916;border-radius:99px;transition:width .15s}
+#load-progress::-webkit-progress-value{background:#22c55e;border-radius:99px;transition:width .15s}
 .progress-steps{display:flex;justify-content:space-between;list-style:none;padding:0;margin:0}
 .progress-steps li{display:block;padding:0;background:none;font-size:10px;color:#68736f}
-.progress-steps li.active{color:#ffe066}
+.progress-steps li.active{color:#86efac}
 .progress-steps li.complete{color:#b4c4bc}
 .load-progress.failed #progress-label{color:#ff8f8f}

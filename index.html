@@ -16,7 +16,7 @@
       --muted: #a2aca6;
       --line: #27302c;
       --panel: #131816;
-      --yellow: #f2c230;
+      --green: #22c55e;
       --blue: #8ce8ff;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -27,42 +27,42 @@
     .wrap { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
     nav { display: flex; align-items: center; justify-content: space-between; min-height: 72px; }
     .brand { display: flex; gap: 10px; align-items: center; font-weight: 850; text-decoration: none; letter-spacing: -.02em; }
-    .coin { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--yellow); color: #211900; box-shadow: 0 0 34px #f2c23055; }
+    .coin { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--green); color: #04150a; box-shadow: 0 0 34px #22c55e55; }
     .nav-links { display: flex; gap: 22px; align-items: center; color: var(--muted); font-size: 14px; }
     .nav-links a { text-decoration: none; }
     .nav-links a:hover { color: var(--ink); }
     .hero { display: grid; grid-template-columns: 1.06fr .94fr; gap: 64px; align-items: center; min-height: 690px; padding: 70px 0 100px; }
-    .eyebrow { color: var(--yellow); font-size: 12px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow { color: var(--green); font-size: 12px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
     h1 { max-width: 750px; margin: 14px 0 24px; font-size: clamp(50px, 7.5vw, 94px); line-height: .94; letter-spacing: -.065em; }
     .lede { max-width: 650px; margin: 0; color: #bac2bd; font-size: clamp(18px, 2vw, 22px); }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
     .button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; padding: 0 19px; border: 1px solid var(--line); border-radius: 10px; background: #1b221f; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform .18s, border-color .18s; }
     .button:hover { transform: translateY(-2px); border-color: #59645f; }
-    .button.primary { border-color: var(--yellow); background: var(--yellow); color: #211900; }
+    .button.primary { border-color: var(--green); background: var(--green); color: #04150a; }
     .mockup { position: relative; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(145deg, #171d1a, #0f1312); padding: 18px; box-shadow: 0 35px 80px #0008; transform: rotate(1.5deg); }
     .browser-bar { display: flex; gap: 6px; padding: 2px 2px 15px; }
     .browser-bar i { width: 8px; height: 8px; border-radius: 50%; background: #3b4540; }
     .post { position: relative; display: grid; grid-template-columns: 45px 1fr; gap: 13px; margin: 10px 0; padding: 16px; border: 1px solid #29332f; border-radius: 12px; background: #111614; }
-    .post.match { outline: 2px solid var(--yellow); box-shadow: 0 0 0 5px #f2c2301f; }
+    .post.match { outline: 2px solid var(--green); box-shadow: 0 0 0 5px #22c55e1f; }
     .avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #26322d, #56675f); }
     .post strong { display: block; font-size: 14px; }
     .post p { margin: 4px 0 0; color: #7f8a84; font-size: 12px; }
-    mark { border-radius: 2px; background: var(--yellow); color: #211900; padding: 1px 3px; }
-    .tag { position: absolute; top: 9px; right: 9px; border-radius: 999px; background: var(--yellow); color: #211900; padding: 2px 7px; font-size: 9px; font-weight: 900; letter-spacing: .07em; }
+    mark { border-radius: 2px; background: var(--green); color: #04150a; padding: 1px 3px; }
+    .tag { position: absolute; top: 9px; right: 9px; border-radius: 999px; background: var(--green); color: #04150a; padding: 2px 7px; font-size: 9px; font-weight: 900; letter-spacing: .07em; }
     section { padding: 95px 0; border-top: 1px solid #1e2522; }
     h2 { margin: 9px 0 18px; font-size: clamp(34px, 5vw, 58px); line-height: 1.02; letter-spacing: -.045em; }
     .section-copy { max-width: 710px; margin: 0; color: var(--muted); font-size: 18px; }
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; }
     .card { min-height: 230px; padding: 26px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
-    .card .number { color: var(--yellow); font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+    .card .number { color: var(--green); font-size: 12px; font-weight: 850; letter-spacing: .12em; }
     .card h3 { margin: 45px 0 10px; font-size: 21px; }
     .card p { margin: 0; color: var(--muted); font-size: 15px; }
     .story { display: grid; grid-template-columns: .8fr 1.2fr; gap: 72px; align-items: start; }
     .quote { margin: 0; font-size: clamp(27px, 4vw, 45px); line-height: 1.15; letter-spacing: -.035em; }
-    .quote span { color: var(--yellow); }
+    .quote span { color: var(--green); }
     .steps { margin: 42px 0 0; padding: 0; list-style: none; counter-reset: step; }
     .steps li { counter-increment: step; display: grid; grid-template-columns: 42px 1fr; gap: 15px; padding: 19px 0; border-bottom: 1px solid var(--line); }
-    .steps li::before { content: counter(step); display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #3a443f; border-radius: 50%; color: var(--yellow); font-size: 12px; font-weight: 900; }
+    .steps li::before { content: counter(step); display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #3a443f; border-radius: 50%; color: var(--green); font-size: 12px; font-weight: 900; }
     .steps strong { display: block; margin-bottom: 3px; }
     .steps span { color: var(--muted); font-size: 14px; }
     .data-box { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; margin-top: 40px; padding: 24px; border: 1px solid #39453f; border-radius: 14px; background: #111714; }
@@ -133,7 +133,7 @@
         <h2>Less hunting. More recognizing.</h2>
         <p class="section-copy">VIP Coin turns a crowded page into a readable watchlist without sending your personal terms anywhere.</p>
         <div class="grid">
-          <article class="card"><span class="number">01 / WATCH</span><h3>Spot VIP profiles</h3><p>Known names, handles, and profile links stand out in yellow with a VIP outline.</p></article>
+          <article class="card"><span class="number">01 / WATCH</span><h3>Spot VIP profiles</h3><p>Known names, handles, and profile links stand out in green with a VIP outline.</p></article>
           <article class="card"><span class="number">02 / CUSTOMIZE</span><h3>Add your own signals</h3><p>Track any name, phrase, or word. Your personal matches appear in blue and stay in your browser.</p></article>
           <article class="card"><span class="number">03 / KEEP UP</span><h3>Works as the page moves</h3><p>Newly loaded content is scanned automatically, so matches appear without a manual page refresh.</p></article>
         </div>
