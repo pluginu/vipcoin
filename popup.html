@@ -19,27 +19,31 @@
   <p id="status" role="status">Open pump.fun to begin.</p>
 
   <section>
-    <h2>Add your own word</h2>
-    <p class="hint">Custom words and phrases are highlighted in blue.</p>
-    <form id="add-form">
-      <input id="term" maxlength="120" autocomplete="off" placeholder="Name, handle, word, or phrase" aria-label="Custom word">
-      <button type="submit">Add</button>
+    <h2>Custom keyword matching <span id="rule-count">0</span></h2>
+    <p class="hint">Custom rules are highlighted in blue and stay in this browser.</p>
+    <form id="rule-form">
+      <input id="term" maxlength="500" autocomplete="off" required placeholder="Name, phrase, or pattern" aria-label="Keyword or expression">
+      <select id="mode" aria-label="Match type">
+        <option value="exact">Exact word / phrase</option>
+        <option value="contains">Contains</option>
+        <option value="starts">Starts with</option>
+        <option value="ends">Ends with</option>
+        <option value="regex">Regular expression</option>
+      </select>
+      <label class="case"><input id="case-sensitive" type="checkbox"> Case sensitive</label>
+      <p id="match-hint" class="hint"></p>
+      <p id="rule-error" role="alert"></p>
+      <button type="submit">Add rule</button>
     </form>
-    <ul id="terms"></ul>
-    <p id="empty" class="empty">No custom words yet.</p>
+    <ul id="rules"></ul>
+    <p id="empty" class="empty">No custom rules yet.</p>
   </section>
 
   <section>
     <h2>Hosted VIP list</h2>
-    <p class="hint">The official list refreshes automatically every 15 minutes and after installing or restarting the extension.</p>
-    <button id="refresh-list" class="secondary wide">Refresh hosted list now</button>
+    <p class="hint">The official list downloads automatically, refreshes in the background every 15 minutes, and keeps the last good cached copy offline.</p>
   </section>
-
-  <div class="actions">
-    <button id="rescan" class="secondary">Rescan page</button>
-    <label class="file-button secondary">Use local CSV<input id="csv-file" type="file" accept=".csv,text/csv" hidden></label>
-  </div>
-  <p class="footnote">Matches profile names, Pump handles and URLs, and X handles and URLs. Everything stays in this browser.</p>
+  <p class="footnote">Scanning follows the live timeline automatically. Matches profile names, Pump handles and URLs, X handles and URLs, and your custom rules.</p>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -3,9 +3,9 @@
   const MAX_BATCH_TEXT_NODES = 2000;
   const CARD_SELECTOR = '[data-testid*="token" i], article, li, [class*="card" i], [class*="coin" i]';
   const SKIP_SELECTOR = 'script,style,noscript,textarea,input,select,option,[contenteditable="true"],[hidden],[aria-hidden="true"]';
-  let settings = { enabled: true, customTerms: [] };
+  let settings = { enabled: true, customRules: [] };
   let vip = { trie: new Map(), urls: new Set(), count: 0 };
-  let customTrie = new Map();
+  let customMatchers = [];
   let vipHighlight = new Highlight();
   let customHighlight = new Highlight();
   let nodeMatches = new WeakMap();
@@ -52,6 +52,19 @@
       node.terminal = true;
     }
     return root;
+  }
+
+  function escapeRegex(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function compileCustomRules(rules) {
+    return rules.filter(rule => rule?.enabled !== false && rule?.value).flatMap(rule => {
+      try {
+        let source = rule.mode === 'regex' ? rule.value : escapeRegex(rule.value.trim()).replace(/\s+/g, '\\s+');
+        if (['exact', 'starts'].includes(rule.mode)) source = `(?<![\\p{L}\\p{N}_])${source}`;
+        if (['exact', 'ends'].includes(rule.mode)) source += `(?![\\p{L}\\p{N}_])`;
+        return [new RegExp(source, rule.caseSensitive ? 'gu' : 'giu')];
+      } catch { return []; }
+    });
   }
 
   function makeVipIndex(csv) {
@@ -107,6 +120,20 @@
     return ranges;
   }
 
+  function customRangesFor(text) {
+    const ranges = [];
+    for (const regex of customMatchers) {
+      regex.lastIndex = 0;
+      let match;
+      while (ranges.length < 100 && (match = regex.exec(text))) {
+        if (!match[0].length) { regex.lastIndex += text.codePointAt(regex.lastIndex) > 0xffff ? 2 : 1; continue; }
+        ranges.push([match.index, match.index + match[0].length]);
+      }
+      if (ranges.length >= 100) break;
+    }
+    return ranges;
+  }
+
   function matchContainer(element, delta) {
     const card = element?.closest?.(CARD_SELECTOR) || element?.closest?.('a')?.parentElement;
     if (!card || card === document.body || card === document.documentElement) return null;
@@ -135,7 +162,7 @@
     const text = textNode.textContent;
     if (!parent || !text.trim() || text.length > 4000 || parent.closest(SKIP_SELECTOR)) return;
     const listRanges = rangesFor(text, vip.trie, true);
-    const ownRanges = rangesFor(text, customTrie, false);
+    const ownRanges = customRangesFor(text);
     const vipRanges = [], customRanges = [];
     for (const [start, end] of listRanges) {
       const range = new Range(); range.setStart(textNode, start); range.setEnd(textNode, end);
@@ -219,11 +246,26 @@
     timer = setTimeout(() => scan(full), delay);
   }
 
+  function queueVisibleCards() {
+    if (!settings.enabled) return;
+    const height = window.innerHeight, width = window.innerWidth;
+    for (const card of document.querySelectorAll(CARD_SELECTOR)) {
+      const rect = card.getBoundingClientRect();
+      if (rect.bottom >= 0 && rect.top <= height && rect.right >= 0 && rect.left <= width) pendingRoots.add(card);
+    }
+    if (pendingRoots.size) schedule(50);
+  }
+
   async function initialize() {
-    settings = { ...settings, ...await chrome.storage.local.get(['enabled', 'customTerms']) };
+    const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms']);
+    if (!Array.isArray(stored.customRules) && Array.isArray(stored.customTerms)) {
+      stored.customRules = stored.customTerms.map((value, index) => ({ id: `migrated-${index}`, value, mode: 'contains', caseSensitive: false, enabled: true }));
+      await chrome.storage.local.set({ customRules: stored.customRules });
+      await chrome.storage.local.remove('customTerms');
+    }
+    settings = { ...settings, ...stored, customRules: stored.customRules || [] };
     if (typeof settings.enabled !== 'boolean') settings.enabled = true;
-    if (!Array.isArray(settings.customTerms)) settings.customTerms = [];
-    customTrie = makeTrie(settings.customTerms.map(normalize).filter(Boolean));
+    customMatchers = compileCustomRules(settings.customRules);
     await loadVip();
     schedule(0, true);
   }
@@ -231,17 +273,16 @@
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     if (changes.enabled) settings.enabled = changes.enabled.newValue;
-    if (changes.customTerms) {
-      settings.customTerms = changes.customTerms.newValue || [];
-      customTrie = makeTrie(settings.customTerms.map(normalize).filter(Boolean));
+    if (changes.customRules) {
+      settings.customRules = changes.customRules.newValue || [];
+      customMatchers = compileCustomRules(settings.customRules);
     }
     if (changes.vipCsvCache) loadVip().then(() => schedule(0, true));
-    else if (changes.enabled || changes.customTerms) schedule(0, true);
+    else if (changes.enabled || changes.customRules) schedule(0, true);
   });
 
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (message.type === 'VIP_STATUS') respond({ ok: true, ...status });
-    else if (message.type === 'VIP_RESCAN') { schedule(0, true); respond({ ok: true }); }
     else if (message.type === 'VIP_RELOAD') {
       loadVip(message.force === true).then(() => {
         schedule(0, true); respond({ ok: true, source: 'hosted URL' });
@@ -258,6 +299,15 @@
     }
     if (pendingRoots.size) schedule();
   }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['href'] });
+
+  // Virtualized feeds may recycle existing cards without inserting a new subtree.
+  // Recheck only viewport cards after scrolling, plus a low-cost periodic safety pass.
+  let scrollTimer = 0;
+  addEventListener('scroll', () => {
+    if (scrollTimer) return;
+    scrollTimer = setTimeout(() => { scrollTimer = 0; queueVisibleCards(); }, 120);
+  }, { passive: true, capture: true });
+  setInterval(queueVisibleCards, 2000);
 
   initialize().catch(error => { status = { ...status, error: error.message }; });
 })();

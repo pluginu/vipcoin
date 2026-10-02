@@ -9,9 +9,9 @@ A local Chrome extension for highlighting Pump.fun profiles found in `vip_list.c
 3. Click **Load unpacked** and select this folder.
 4. Open or reload Pump.fun.
 
-The extension automatically downloads `https://pluginu.github.io/vipcoin/web/vip_list.csv` when it is installed or restarted and checks it every 15 minutes. It uses conditional requests and caches the last good copy for fast startup and offline use. The bundled CSV is the fallback for a fresh offline install. You can also pause highlighting, add custom terms, rescan, or load a local CSV with the same columns.
+The extension automatically downloads `https://pluginu.github.io/vipcoin/web/vip_list.csv` when it is installed or restarted and checks it every 15 minutes. It uses conditional requests and caches the last good copy for fast startup and offline use. The bundled CSV is the fallback for a fresh offline install. Users cannot replace the official list with a local file.
 
-VIP list matches are yellow and custom-term matches are blue. Matching works on content that Pump.fun loads later without requiring a page refresh.
+VIP list matches are yellow and custom-rule matches are blue. Custom rules support exact, contains, starts-with, ends-with, regex, and case-sensitive matching. Mutation, scroll, and periodic viewport scanning catch content that Pump.fun loads or recycles later without requiring a page refresh.
 
 ## GitHub Pages
 
