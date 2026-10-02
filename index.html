@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VIP Coin is a fast, private Chrome extension that highlights the Pump.fun profiles and watch terms you care about.">
+  <meta name="theme-color" content="#090c0b">
+  <title>VIP Coin — See the signal faster</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f5f7f2;
+      --muted: #a2aca6;
+      --line: #27302c;
+      --panel: #131816;
+      --yellow: #f2c230;
+      --blue: #8ce8ff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #090c0b; color: var(--ink); line-height: 1.55; }
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+    nav { display: flex; align-items: center; justify-content: space-between; min-height: 72px; }
+    .brand { display: flex; gap: 10px; align-items: center; font-weight: 850; text-decoration: none; letter-spacing: -.02em; }
+    .coin { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--yellow); color: #211900; box-shadow: 0 0 34px #f2c23055; }
+    .nav-links { display: flex; gap: 22px; align-items: center; color: var(--muted); font-size: 14px; }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .hero { display: grid; grid-template-columns: 1.06fr .94fr; gap: 64px; align-items: center; min-height: 690px; padding: 70px 0 100px; }
+    .eyebrow { color: var(--yellow); font-size: 12px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 750px; margin: 14px 0 24px; font-size: clamp(50px, 7.5vw, 94px); line-height: .94; letter-spacing: -.065em; }
+    .lede { max-width: 650px; margin: 0; color: #bac2bd; font-size: clamp(18px, 2vw, 22px); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; padding: 0 19px; border: 1px solid var(--line); border-radius: 10px; background: #1b221f; font-size: 14px; font-weight: 800; text-decoration: none; transition: transform .18s, border-color .18s; }
+    .button:hover { transform: translateY(-2px); border-color: #59645f; }
+    .button.primary { border-color: var(--yellow); background: var(--yellow); color: #211900; }
+    .mockup { position: relative; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(145deg, #171d1a, #0f1312); padding: 18px; box-shadow: 0 35px 80px #0008; transform: rotate(1.5deg); }
+    .browser-bar { display: flex; gap: 6px; padding: 2px 2px 15px; }
+    .browser-bar i { width: 8px; height: 8px; border-radius: 50%; background: #3b4540; }
+    .post { position: relative; display: grid; grid-template-columns: 45px 1fr; gap: 13px; margin: 10px 0; padding: 16px; border: 1px solid #29332f; border-radius: 12px; background: #111614; }
+    .post.match { outline: 2px solid var(--yellow); box-shadow: 0 0 0 5px #f2c2301f; }
+    .avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #26322d, #56675f); }
+    .post strong { display: block; font-size: 14px; }
+    .post p { margin: 4px 0 0; color: #7f8a84; font-size: 12px; }
+    mark { border-radius: 2px; background: var(--yellow); color: #211900; padding: 1px 3px; }
+    .tag { position: absolute; top: 9px; right: 9px; border-radius: 999px; background: var(--yellow); color: #211900; padding: 2px 7px; font-size: 9px; font-weight: 900; letter-spacing: .07em; }
+    section { padding: 95px 0; border-top: 1px solid #1e2522; }
+    h2 { margin: 9px 0 18px; font-size: clamp(34px, 5vw, 58px); line-height: 1.02; letter-spacing: -.045em; }
+    .section-copy { max-width: 710px; margin: 0; color: var(--muted); font-size: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; }
+    .card { min-height: 230px; padding: 26px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .card .number { color: var(--yellow); font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+    .card h3 { margin: 45px 0 10px; font-size: 21px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .story { display: grid; grid-template-columns: .8fr 1.2fr; gap: 72px; align-items: start; }
+    .quote { margin: 0; font-size: clamp(27px, 4vw, 45px); line-height: 1.15; letter-spacing: -.035em; }
+    .quote span { color: var(--yellow); }
+    .steps { margin: 42px 0 0; padding: 0; list-style: none; counter-reset: step; }
+    .steps li { counter-increment: step; display: grid; grid-template-columns: 42px 1fr; gap: 15px; padding: 19px 0; border-bottom: 1px solid var(--line); }
+    .steps li::before { content: counter(step); display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #3a443f; border-radius: 50%; color: var(--yellow); font-size: 12px; font-weight: 900; }
+    .steps strong { display: block; margin-bottom: 3px; }
+    .steps span { color: var(--muted); font-size: 14px; }
+    .data-box { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; margin-top: 40px; padding: 24px; border: 1px solid #39453f; border-radius: 14px; background: #111714; }
+    .data-box code { display: block; overflow-wrap: anywhere; color: var(--blue); font-size: 13px; }
+    .data-box small { display: block; margin-top: 5px; color: var(--muted); }
+    button.button { color: var(--ink); cursor: pointer; }
+    footer { display: flex; justify-content: space-between; gap: 24px; padding: 34px 0 55px; color: #77817c; font-size: 13px; }
+    footer p { margin: 0; }
+    @media (max-width: 780px) {
+      .nav-links a:not(.button) { display: none; }
+      .hero, .story { grid-template-columns: 1fr; gap: 45px; }
+      .hero { min-height: auto; padding-top: 65px; }
+      .mockup { transform: none; }
+      .grid { grid-template-columns: 1fr; }
+      .card { min-height: 190px; }
+      .data-box { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav aria-label="Main navigation">
+      <a class="brand" href="#top"><span class="coin">V</span>VIP Coin</a>
+      <div class="nav-links">
+        <a href="#why">Why we built it</a>
+        <a href="#how">How it works</a>
+        <a class="button" href="https://github.com/pluginu/VIP-Coin">View on GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero wrap">
+      <div>
+        <div class="eyebrow">A faster way to spot who matters</div>
+        <h1>See the signal before the scroll.</h1>
+        <p class="lede">VIP Coin is a lightweight Chrome extension that highlights watched Pump.fun profiles and the terms you care about—right where you are already looking.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/pluginu/VIP-Coin/archive/refs/heads/main.zip">Download the extension</a>
+          <a class="button" href="#how">Install in minutes</a>
+        </div>
+      </div>
+      <div class="mockup" aria-label="Preview of a highlighted VIP profile">
+        <div class="browser-bar"><i></i><i></i><i></i></div>
+        <div class="post">
+          <div class="avatar"></div><div><strong>New profile</strong><p>Another launch moving through the feed...</p></div>
+        </div>
+        <div class="post match">
+          <span class="tag">VIP</span><div class="avatar"></div><div><strong><mark>Watched profile</mark></strong><p>A name you care about is active now.</p></div>
+        </div>
+        <div class="post">
+          <div class="avatar"></div><div><strong>Market update</strong><p>Custom terms can be highlighted in blue.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <section id="why">
+      <div class="wrap story">
+        <div><div class="eyebrow">Why we built it</div><h2>Built from a problem we felt ourselves.</h2></div>
+        <p class="quote">We were building our own passion project when we realized how close this was to something we needed every day: a way to <span>engage faster and more effectively</span>. So we made it useful for everyone watching a busy feed.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="eyebrow">Focused by design</div>
+        <h2>Less hunting. More recognizing.</h2>
+        <p class="section-copy">VIP Coin turns a crowded page into a readable watchlist without sending your personal terms anywhere.</p>
+        <div class="grid">
+          <article class="card"><span class="number">01 / WATCH</span><h3>Spot VIP profiles</h3><p>Known names, handles, and profile links receive a clear yellow highlight and VIP outline.</p></article>
+          <article class="card"><span class="number">02 / CUSTOMIZE</span><h3>Add your own signals</h3><p>Track any name, phrase, or word. Your personal matches appear in blue and stay in your browser.</p></article>
+          <article class="card"><span class="number">03 / KEEP UP</span><h3>Works as the page moves</h3><p>Newly loaded content is scanned automatically, so matches appear without a manual page refresh.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap story">
+        <div><div class="eyebrow">Get started</div><h2>From download to detection.</h2></div>
+        <div>
+          <ol class="steps">
+            <li><div><strong>Download and unzip</strong><span>Get the project from GitHub and keep the folder somewhere convenient.</span></div></li>
+            <li><div><strong>Open Chrome extensions</strong><span>Visit <code>chrome://extensions</code> and turn on Developer mode.</span></div></li>
+            <li><div><strong>Load the folder</strong><span>Choose “Load unpacked,” select the project folder, then open or refresh Pump.fun.</span></div></li>
+            <li><div><strong>Make it yours</strong><span>Open VIP Coin to pause, rescan, add custom terms, or connect a hosted CSV.</span></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="data">
+      <div class="wrap">
+        <div class="eyebrow">Open data path</div>
+        <h2>The list is ready for the web.</h2>
+        <p class="section-copy">The extension includes an offline copy. Once GitHub Pages is live, this public CSV can become the hosted source and refresh without repackaging the extension.</p>
+        <div class="data-box">
+          <div><code id="data-url">https://pluginu.github.io/VIP-Coin/web/vip_list.csv</code><small id="data-status">Public CSV endpoint · checking availability…</small></div>
+          <button class="button" id="copy-data-url" type="button">Copy data URL</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>VIP Coin is an independent open-source utility and is not affiliated with Pump.fun.</p>
+    <p>Built for faster recognition—not financial advice.</p>
+  </footer>
+  <script>
+    const dataUrl = new URL('web/vip_list.csv', location.href).href;
+    const dataUrlElement = document.getElementById('data-url');
+    const dataStatus = document.getElementById('data-status');
+    const copyButton = document.getElementById('copy-data-url');
+    dataUrlElement.textContent = dataUrl;
+
+    fetch(dataUrl, { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error();
+        return response.text();
+      })
+      .then(csv => {
+        const profiles = Math.max(0, csv.trim().split(/\r?\n/).length - 1);
+        dataStatus.textContent = `${profiles.toLocaleString()} profiles available in the public CSV`;
+      })
+      .catch(() => { dataStatus.textContent = 'Public CSV endpoint · available when this site is published'; });
+
+    copyButton.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(dataUrl);
+        copyButton.textContent = 'Copied';
+        setTimeout(() => { copyButton.textContent = 'Copy data URL'; }, 1800);
+      } catch {
+        location.href = dataUrl;
+      }
+    });
+  </script>
+</body>
+</html>
