@@ -2,8 +2,12 @@
   const MAX_INITIAL_TEXT_NODES = 5000;
   const MAX_BATCH_TEXT_NODES = 2000;
   const CARD_SELECTOR = '[data-testid*="token" i], article, li, [class*="card" i], [class*="coin" i]';
+  const POST_CONTAINER_SELECTOR = 'article, [data-testid*="post" i], [class*="post" i], [data-testid*="token" i], [class*="card" i], [class*="coin" i], li';
   const SKIP_SELECTOR = 'script,style,noscript,textarea,input,select,option,[contenteditable="true"],[hidden],[aria-hidden="true"]';
-  let settings = { enabled: true, customRules: [] };
+  const SEEN_POST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+  const MAX_SEEN_POSTS = 25000;
+  const POST_PATHS = [/\/status\/[^/]+/i, /\/(?:p|reel|reels|tv)\/[^/]+/i, /\/comments\/[^/]+/i, /\/posts\/[^/]+/i, /\/permalink\/[^/]+/i, /\/coin\/[^/]+/i];
+  let settings = { enabled: true, customRules: [], trackSeenPosts: false };
   let vip = { trie: new Map(), urls: new Set(), count: 0 };
   let customMatchers = [];
   let vipHighlight = new Highlight();
@@ -16,6 +20,13 @@
   let scanning = false;
   let scanAgain = false;
   let totalMatches = 0;
+  let seenPosts = {};
+  let knownSeenPosts = new Set();
+  let postContainers = new WeakMap();
+  let pendingSeenPosts = {};
+  let seenWriteTimer = null;
+  let activePagePostId = '';
+  const sessionPagePosts = new Set();
   let progress = { stage: 'loading', detail: 'Loading VIP list…', percent: null };
   const yieldToPage = () => new Promise(resolve => setTimeout(resolve, 0));
   let status = { matches: 0, vipCount: 0, message: 'Loading VIP list…' };
@@ -39,6 +50,69 @@
 
   function normalize(value) {
     return String(value || '').trim().replace(/^@/, '').toLocaleLowerCase();
+  }
+
+  function postIdFromURL(value) {
+    try {
+      const url = new URL(value, location.href);
+      if (!/^https?:$/.test(url.protocol) || !POST_PATHS.some(pattern => pattern.test(url.pathname))) return '';
+      return `${url.hostname.toLocaleLowerCase()}${url.pathname.replace(/\/$/, '')}`;
+    } catch { return ''; }
+  }
+
+  function clearSeenMarks() {
+    document.querySelectorAll('[data-vip-coin-seen]').forEach(element => element.removeAttribute('data-vip-coin-seen'));
+    document.documentElement.removeAttribute('data-vip-coin-page-seen');
+    postContainers = new WeakMap();
+  }
+
+  async function flushSeenPosts() {
+    const additions = pendingSeenPosts;
+    pendingSeenPosts = {};
+    const { seenPosts: stored = {} } = await chrome.storage.local.get('seenPosts');
+    const cutoff = Date.now() - SEEN_POST_TTL_MS;
+    const merged = Object.fromEntries(Object.entries({ ...stored, ...additions })
+      .filter(([, timestamp]) => Number(timestamp) >= cutoff)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, MAX_SEEN_POSTS));
+    seenPosts = merged;
+    await chrome.storage.local.set({ seenPosts: merged });
+  }
+
+  function rememberPost(id) {
+    if (!id || seenPosts[id] || pendingSeenPosts[id]) return;
+    const timestamp = Date.now();
+    seenPosts[id] = timestamp;
+    pendingSeenPosts[id] = timestamp;
+    clearTimeout(seenWriteTimer);
+    seenWriteTimer = setTimeout(() => flushSeenPosts().catch(console.error), 250);
+  }
+
+  function trackPostAnchor(anchor) {
+    if (!settings.trackSeenPosts) return;
+    const id = postIdFromURL(anchor.href);
+    if (!id) return;
+    const container = anchor.closest(POST_CONTAINER_SELECTOR) || anchor;
+    const previousId = postContainers.get(container);
+    if (previousId === id) return;
+    postContainers.set(container, id);
+    if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+    if (knownSeenPosts.has(id) || seenPosts[id] || pendingSeenPosts[id]) container.setAttribute('data-vip-coin-seen', '');
+    else rememberPost(id);
+  }
+
+  function trackCurrentPage() {
+    if (!settings.trackSeenPosts) return;
+    const id = postIdFromURL(location.href);
+    if (id === activePagePostId) return;
+    activePagePostId = id;
+    if (!id) { document.documentElement.removeAttribute('data-vip-coin-page-seen'); return; }
+    if (knownSeenPosts.has(id) || sessionPagePosts.has(id)) document.documentElement.setAttribute('data-vip-coin-page-seen', '');
+    else {
+      document.documentElement.removeAttribute('data-vip-coin-page-seen');
+      sessionPagePosts.add(id);
+      rememberPost(id);
+    }
   }
 
   // A character trie rejects non-matching first letters immediately. Matching cost
@@ -196,6 +270,7 @@
   }
 
   function scanAnchor(anchor) {
+    trackPostAnchor(anchor);
     const old = anchorMatches.get(anchor);
     if (old) { matchContainer(old, -1); totalMatches = Math.max(0, totalMatches - 1); anchorMatches.delete(anchor); }
     let url;
@@ -234,7 +309,10 @@
     scanning = true; scanAgain = false;
     try {
       if (full) { resetHighlights(); pendingRoots = new Set([document.body]); }
-      if (!settings.enabled) { resetHighlights(); pendingRoots.clear(); status = { matches: 0, vipCount: vip.count, message: 'VIP Coin is paused.' }; return; }
+      if (!settings.enabled) {
+        resetHighlights();
+        if (!settings.trackSeenPosts) { pendingRoots.clear(); status = { matches: 0, vipCount: vip.count, message: 'VIP Coin is paused.' }; return; }
+      }
       const roots = [...pendingRoots]; pendingRoots.clear();
       let scanned = 0, limited = false;
       for (const root of roots) {
@@ -243,12 +321,13 @@
         if (remaining <= 0) { limited = true; break; }
         const { texts, anchors } = collect(root, remaining);
         scanned += texts.length;
-        texts.forEach(scanTextNode); anchors.forEach(scanAnchor);
+        if (settings.enabled) texts.forEach(scanTextNode);
+        anchors.forEach(scanAnchor);
       }
       status = {
-        matches: totalMatches,
+        matches: settings.enabled ? totalMatches : 0,
         vipCount: vip.count,
-        message: limited ? 'Page scanned (large-page batch limit reached).' : 'Watching this page for new matches.'
+        message: !settings.enabled ? 'VIP highlighting is paused; seen-post tracking is active.' : limited ? 'Page scanned (large-page batch limit reached).' : 'Watching this page for new matches.'
       };
     } catch (error) {
       status = { ...status, error: error.message };
@@ -264,7 +343,8 @@
   }
 
   function queueVisibleCards() {
-    if (!settings.enabled) return;
+    trackCurrentPage();
+    if (!settings.enabled && !settings.trackSeenPosts) return;
     const height = window.innerHeight, width = window.innerWidth;
     for (const card of document.querySelectorAll(CARD_SELECTOR)) {
       const rect = card.getBoundingClientRect();
@@ -274,16 +354,20 @@
   }
 
   async function initialize() {
-    const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms']);
+    const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts', 'seenPosts']);
     if (!Array.isArray(stored.customRules) && Array.isArray(stored.customTerms)) {
       stored.customRules = stored.customTerms.map((value, index) => ({ id: `migrated-${index}`, value, mode: 'contains', caseSensitive: false, enabled: true }));
       await chrome.storage.local.set({ customRules: stored.customRules });
       await chrome.storage.local.remove('customTerms');
     }
     settings = { ...settings, ...stored, customRules: stored.customRules || [] };
+    const cutoff = Date.now() - SEEN_POST_TTL_MS;
+    seenPosts = Object.fromEntries(Object.entries(stored.seenPosts || {}).filter(([, timestamp]) => Number(timestamp) >= cutoff));
+    knownSeenPosts = new Set(Object.keys(seenPosts));
     if (typeof settings.enabled !== 'boolean') settings.enabled = true;
     customMatchers = compileCustomRules(settings.customRules);
     await loadVip();
+    trackCurrentPage();
     schedule(0, true);
   }
 
@@ -294,8 +378,22 @@
       settings.customRules = changes.customRules.newValue || [];
       customMatchers = compileCustomRules(settings.customRules);
     }
+    if (changes.trackSeenPosts) {
+      settings.trackSeenPosts = changes.trackSeenPosts.newValue === true;
+      if (!settings.trackSeenPosts) { activePagePostId = ''; clearSeenMarks(); }
+      else { trackCurrentPage(); pendingRoots.add(document.body); }
+    }
+    if (changes.seenPosts) {
+      seenPosts = changes.seenPosts.newValue || {};
+      knownSeenPosts = new Set([...knownSeenPosts].filter(id => seenPosts[id]));
+      if (!Object.keys(seenPosts).length) {
+        knownSeenPosts = new Set(); sessionPagePosts.clear(); activePagePostId = '';
+        pendingSeenPosts = {}; clearTimeout(seenWriteTimer); clearSeenMarks();
+      }
+    }
     if (changes.vipCsvCache) loadVip().then(() => schedule(0, true));
     else if (changes.enabled || changes.customRules) schedule(0, true);
+    else if (changes.trackSeenPosts && settings.trackSeenPosts) schedule(0);
   });
 
   chrome.runtime.onMessage.addListener((message, sender, respond) => {

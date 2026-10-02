@@ -20,6 +20,7 @@ form{display:grid;gap:7px;margin:10px 0}
 input,select{min-width:0;width:100%;padding:9px 10px;border:1px solid #37413e;border-radius:8px;background:#171d1b;color:white;outline:none}
 input:focus,select:focus{border-color:#d6a90e}
 button{border:0;border-radius:8px;padding:9px 12px;background:#e4b916;color:#1e1800;font:700 12px system-ui;cursor:pointer;text-align:center}
+.secondary{background:#242c29;color:#dce3df;border:1px solid #39433f}
 ul{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin:0;padding:0;list-style:none}
 li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:7px 9px;border-radius:7px;background:#161d1b;color:#cfeef5}
 li input{width:auto}
@@ -34,6 +35,11 @@ li button{padding:2px 6px;background:transparent;color:#8d9995;font-size:17px}
 #rule-error{min-height:0;margin:0;color:#ff8f8f;font-size:11px}
 #rule-error:empty{display:none}
 #rule-count{color:#8f9b97;font-size:11px}
+.setting-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.setting-heading h2{margin-bottom:2px}
+.setting-heading .hint{margin:0}
+.seen-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:#aeb8b4;font-size:11px}
+.seen-summary button{padding:6px 9px;font-size:10px}
 
 .popup-brand{display:flex;align-items:center;gap:10px}
 .popup-brand img{display:block;flex-shrink:0}

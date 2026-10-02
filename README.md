@@ -16,6 +16,8 @@ The toggle controls detection across all HTTP and HTTPS websites. Browser intern
 
 VIP list matches are yellow and custom-rule matches are blue. Custom rules support exact, contains, starts-with, ends-with, regex, and case-sensitive matching. Mutation, scroll, and periodic viewport scanning catch content that websites load or recycle later without requiring a page refresh.
 
+The optional **Seen-post protection** toggle remembers recognized post permalinks locally and displays a red warning when the same post appears again. Entries expire automatically after seven days, and **Clear history** deletes them immediately. The tracker recognizes common post URL formats used by Pump.fun, X, Instagram, Reddit, and other sites with post or permalink paths.
+
 ## GitHub Pages
 
 The project site lives in `index.html` and can be published directly from the repository root with GitHub Pages. A web-accessible copy of the dataset lives at `web/vip_list.csv`.

@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
-const DEFAULTS = { enabled: true, customRules: [] };
+const DEFAULTS = { enabled: true, customRules: [], trackSeenPosts: false };
+const SEEN_POST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const HINTS = {
   exact: 'Matches a whole word or phrase: “Ann” will not match “Anna”.',
   contains: 'Matches anywhere in text: “ann” also matches “Joanna”.',
@@ -33,13 +34,20 @@ function validateRule(rule) {
 }
 
 async function loadSettings() {
-  const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms']);
+  const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts']);
   if (!Array.isArray(stored.customRules) && Array.isArray(stored.customTerms)) {
     stored.customRules = stored.customTerms.map(value => ({ id: crypto.randomUUID(), value, mode: 'contains', caseSensitive: false, enabled: true }));
     await chrome.storage.local.set({ customRules: stored.customRules });
     await chrome.storage.local.remove('customTerms');
   }
   settings = { ...DEFAULTS, ...stored, customRules: stored.customRules || [] };
+}
+
+async function renderSeenPosts() {
+  const { seenPosts = {} } = await chrome.storage.local.get('seenPosts');
+  const cutoff = Date.now() - SEEN_POST_TTL_MS;
+  $('track-seen-posts').checked = settings.trackSeenPosts;
+  $('seen-count').textContent = Object.values(seenPosts).filter(timestamp => Number(timestamp) >= cutoff).length.toLocaleString();
 }
 
 function renderRules() {
@@ -102,6 +110,14 @@ async function renderStatus() {
 function showHint() { $('match-hint').textContent = HINTS[$('mode').value]; }
 
 $('enabled').onchange = async event => { settings.enabled = event.target.checked; await chrome.storage.local.set({ enabled: settings.enabled }); };
+$('track-seen-posts').onchange = async event => {
+  settings.trackSeenPosts = event.target.checked;
+  await chrome.storage.local.set({ trackSeenPosts: settings.trackSeenPosts });
+};
+$('clear-seen').onclick = async () => {
+  await chrome.storage.local.set({ seenPosts: {} });
+  await renderSeenPosts();
+};
 $('mode').onchange = showHint;
 $('rule-form').onsubmit = async event => {
   event.preventDefault(); $('rule-error').textContent = '';
@@ -119,9 +135,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
   if (changes.enabled) settings.enabled = changes.enabled.newValue;
   if (changes.customRules) settings.customRules = changes.customRules.newValue || [];
-  renderRules(); renderStatus();
+  if (changes.trackSeenPosts) settings.trackSeenPosts = changes.trackSeenPosts.newValue === true;
+  renderRules(); renderSeenPosts(); renderStatus();
 });
 
 loadSettings().then(() => {
-  renderRules(); showHint(); renderStatus(); setInterval(renderStatus, 250);
+  renderRules(); renderSeenPosts(); showHint(); renderStatus(); setInterval(renderStatus, 250);
 }).catch(error => { $('rule-error').textContent = error.message; });

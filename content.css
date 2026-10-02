@@ -30,3 +30,39 @@
   letter-spacing: .06em;
   pointer-events: none;
 }
+
+[data-vip-coin-seen] {
+  outline: 2px solid #ff7657 !important;
+  outline-offset: 2px !important;
+}
+
+[data-vip-coin-seen]::before {
+  content: "SEEN BEFORE";
+  position: absolute;
+  z-index: 2147483647;
+  top: 5px;
+  left: 5px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #d83b22;
+  color: white;
+  font: 800 10px/1.5 system-ui, sans-serif;
+  letter-spacing: .05em;
+  pointer-events: none;
+}
+
+html[data-vip-coin-page-seen]::before {
+  content: "VIP Coin: You have seen this post before";
+  position: fixed;
+  z-index: 2147483647;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: #d83b22;
+  color: white;
+  box-shadow: 0 5px 20px rgb(0 0 0 / 35%);
+  font: 800 12px/1.4 system-ui, sans-serif;
+  pointer-events: none;
+}

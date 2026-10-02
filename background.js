@@ -1,9 +1,21 @@
 const VIP_CSV_URL = 'https://pluginu.github.io/vipcoin/web/vip_list.csv';
 const REFRESH_MINUTES = 15;
 const REFRESH_ALARM = 'refresh-vip-list';
+const SEEN_POST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_SEEN_POSTS = 25000;
 const EXPECTED_HEADER = /^profile_name,pump_handle,pump_profile_url,x_handle,x_url,followers(?:\r?\n|$)/i;
 
 let pendingFetch;
+
+async function pruneSeenPosts() {
+  const { seenPosts = {} } = await chrome.storage.local.get('seenPosts');
+  const cutoff = Date.now() - SEEN_POST_TTL_MS;
+  const current = Object.fromEntries(Object.entries(seenPosts)
+    .filter(([, timestamp]) => Number(timestamp) >= cutoff)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, MAX_SEEN_POSTS));
+  if (Object.keys(current).length !== Object.keys(seenPosts).length) await chrome.storage.local.set({ seenPosts: current });
+}
 
 async function reportDownload(stage, detail, received = 0, total = 0) {
   await chrome.storage.local.set({ vipDownloadProgress: { stage, detail, received, total } });
@@ -99,11 +111,11 @@ async function initialize() {
   if (!await chrome.alarms.get(REFRESH_ALARM)) {
     await chrome.alarms.create(REFRESH_ALARM, { periodInMinutes: REFRESH_MINUTES });
   }
-  await loadVipList();
+  await Promise.all([loadVipList(), pruneSeenPosts()]);
 }
 
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === REFRESH_ALARM) loadVipList(true).catch(console.error);
+  if (alarm.name === REFRESH_ALARM) Promise.all([loadVipList(true), pruneSeenPosts()]).catch(console.error);
 });
 chrome.runtime.onInstalled.addListener(() => initialize().catch(console.error));
 chrome.runtime.onStartup.addListener(() => initialize().catch(console.error));
