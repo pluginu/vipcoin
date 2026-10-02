@@ -16,7 +16,7 @@ async function activeTab() {
 
 async function send(type, payload = {}) {
   const tab = await activeTab();
-  if (!tab?.id || !/^https:\/\/(?:[^/]+\.)?pump\.fun\//i.test(tab.url || '')) return { ok: false, error: 'Open a pump.fun page first.' };
+  if (!tab?.id || !/^https?:\/\//i.test(tab.url || '')) return { ok: false, error: 'Open a website to use highlighting. Browser internal pages are not supported.' };
   return chrome.tabs.sendMessage(tab.id, { type, ...payload });
 }
 
@@ -72,7 +72,7 @@ async function renderStatus() {
   $('matches').textContent = result?.matches ?? 0;
   $('vip-count').textContent = result?.vipCount?.toLocaleString?.() ?? '—';
   const warning = stored.vipCsvLastError ? ` Hosted-list warning: ${stored.vipCsvLastError}` : '';
-  $('status').textContent = (result?.error || result?.message || (result?.ok ? 'Watching the live timeline.' : 'Open a pump.fun page first.')) + warning;
+  $('status').textContent = (!settings.enabled ? 'Highlighting is paused. Turn on the toggle to resume.' : result?.error || result?.message || (result?.ok ? 'Watching this page for new matches.' : 'Refresh this page after installing and turning on the extension.')) + warning;
 }
 
 function showHint() { $('match-hint').textContent = HINTS[$('mode').value]; }

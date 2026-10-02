@@ -1,27 +1,49 @@
 {
   "manifest_version": 3,
   "name": "VIP Coin Highlighter",
-  "version": "1.2.0",
-  "description": "Highlight Pump.fun profiles that match your VIP list and custom watch words.",
-  "permissions": ["storage", "activeTab", "unlimitedStorage", "alarms"],
-  "host_permissions": ["https://pump.fun/*", "https://*.pump.fun/*", "https://pluginu.github.io/*"],
-  "background": { "service_worker": "background.js" },
+  "version": "1.2.1",
+  "description": "Highlight VIP profiles and custom watch words on any website.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "unlimitedStorage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "VIP Coin Highlighter"
   },
   "content_scripts": [
     {
-      "matches": ["https://pump.fun/*", "https://*.pump.fun/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["vip_list.csv"],
-      "matches": ["https://pump.fun/*", "https://*.pump.fun/*"]
+      "resources": [
+        "vip_list.csv"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
     }
   ]
 }

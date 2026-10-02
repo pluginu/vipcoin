@@ -8,15 +8,16 @@
 </head>
 <body>
   <header>
-    <div><span class="eyebrow">PUMP.FUN WATCHLIST</span><h1>VIP Coin</h1></div>
-    <label class="toggle"><input id="enabled" type="checkbox"><span></span></label>
+    <div><span class="eyebrow">WEBSITE WATCHLIST</span><h1>VIP Coin</h1></div>
+    <label class="toggle"><input id="enabled" type="checkbox" aria-label="Enable highlighting on all websites"><span></span></label>
   </header>
 
   <section class="status-card">
     <div><strong id="matches">0</strong><span>matches on page</span></div>
     <div><strong id="vip-count">—</strong><span>VIP profiles loaded</span></div>
   </section>
-  <p id="status" role="status">Open pump.fun to begin.</p>
+  <p class="hint">After installing, turn on the toggle and refresh the page. Highlighting works on any website.</p>
+  <p id="status" role="status">Refresh this page after installing and turning on the extension.</p>
 
   <section>
     <h2>Custom keyword matching <span id="rule-count">0</span></h2>
@@ -41,9 +42,9 @@
 
   <section>
     <h2>Hosted VIP list</h2>
-    <p class="hint">The official list downloads automatically, refreshes in the background every 15 minutes, and keeps the last good cached copy offline.</p>
+    <p class="hint">The official list downloads once and is saved locally for future startups. Background checks run every 15 minutes and keep the last good copy available offline.</p>
   </section>
-  <p class="footnote">Scanning follows the live timeline automatically. Matches profile names, Pump handles and URLs, X handles and URLs, and your custom rules.</p>
+  <p class="footnote">Scanning follows page updates automatically. Matches profile names, Pump handles and URLs, X handles and URLs, and your custom rules.</p>
   <script src="popup.js"></script>
 </body>
 </html>

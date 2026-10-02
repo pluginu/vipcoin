@@ -1,17 +1,20 @@
 # VIP Coin Highlighter
 
-A local Chrome extension for highlighting Pump.fun profiles found in `vip_list.csv`, plus any custom words or phrases you add.
+A local Chrome extension for highlighting VIP profiles on any website using `vip_list.csv`, plus any custom words or phrases you add.
 
 ## Install
 
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
 3. Click **Load unpacked** and select this folder.
-4. Open or reload Pump.fun.
+4. Open the extension popup and turn on the highlighting toggle.
+5. Refresh the website you want to scan after installing and turning on the extension.
 
-The extension automatically downloads `https://pluginu.github.io/vipcoin/web/vip_list.csv` when it is installed or restarted and checks it every 15 minutes. It uses conditional requests and caches the last good copy for fast startup and offline use. The bundled CSV is the fallback for a fresh offline install. Users cannot replace the official list with a local file.
+The extension automatically downloads `https://pluginu.github.io/vipcoin/web/vip_list.csv` once when no local copy exists and saves it in persistent browser storage. Startup, extension updates, and page loads reuse that saved copy without contacting the server. Background checks run every 15 minutes using conditional requests; an unchanged list is not downloaded again, and a successful update replaces the saved copy. The last good copy remains available offline. The bundled CSV is the fallback for a fresh offline install. Users cannot replace the official list with a local file.
 
-VIP list matches are yellow and custom-rule matches are blue. Custom rules support exact, contains, starts-with, ends-with, regex, and case-sensitive matching. Mutation, scroll, and periodic viewport scanning catch content that Pump.fun loads or recycles later without requiring a page refresh.
+The toggle controls highlighting across all HTTP and HTTPS websites. Browser internal pages and other protected pages do not allow extensions to scan their content.
+
+VIP list matches are yellow and custom-rule matches are blue. Custom rules support exact, contains, starts-with, ends-with, regex, and case-sensitive matching. Mutation, scroll, and periodic viewport scanning catch content that websites load or recycle later without requiring a page refresh.
 
 ## GitHub Pages
 

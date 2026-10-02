@@ -1,6 +1,5 @@
 const VIP_CSV_URL = 'https://pluginu.github.io/vipcoin/web/vip_list.csv';
 const REFRESH_MINUTES = 15;
-const REFRESH_MS = REFRESH_MINUTES * 60 * 1000;
 const REFRESH_ALARM = 'refresh-vip-list';
 const EXPECTED_HEADER = /^profile_name,pump_handle,pump_profile_url,x_handle,x_url,followers(?:\r?\n|$)/i;
 
@@ -10,8 +9,9 @@ async function fetchVipList(force = false) {
   const stored = await chrome.storage.local.get([
     'vipCsvCache', 'vipCsvFetchedAt', 'vipCsvEtag', 'vipCsvLastModified'
   ]);
-  const fresh = stored.vipCsvCache && Date.now() - Number(stored.vipCsvFetchedAt || 0) < REFRESH_MS;
-  if (!force && fresh) {
+  // Startup and page loads use the persistent copy, regardless of its age.
+  // Only scheduled refreshes or an explicit forced reload contact the server.
+  if (!force && stored.vipCsvCache) {
     return { ok: true, csv: stored.vipCsvCache, source: 'cache', fetchedAt: stored.vipCsvFetchedAt };
   }
 
@@ -59,17 +59,17 @@ function loadVipList(force = false) {
   return pendingFetch;
 }
 
-async function initialize(force = false) {
+async function initialize() {
   if (!await chrome.alarms.get(REFRESH_ALARM)) {
     await chrome.alarms.create(REFRESH_ALARM, { periodInMinutes: REFRESH_MINUTES });
   }
-  await loadVipList(force);
+  await loadVipList();
 }
 
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === REFRESH_ALARM) loadVipList(true).catch(console.error);
 });
-chrome.runtime.onInstalled.addListener(() => initialize(true).catch(console.error));
+chrome.runtime.onInstalled.addListener(() => initialize().catch(console.error));
 chrome.runtime.onStartup.addListener(() => initialize().catch(console.error));
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
