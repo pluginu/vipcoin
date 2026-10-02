@@ -20,7 +20,7 @@ The project site lives in `index.html` and can be published directly from the re
 After Pages is enabled for the `main` branch and repository root, the hosted CSV URL will be:
 
 ```text
-https://pluginu.github.io/VIP-Coin/web/vip_list.csv
+https://pluginu.github.io/vipcoin/web/vip_list.csv
 ```
 
 Paste that URL into **Hosted VIP list** in the extension popup once the site is live. Keep `vip_list.csv` and `web/vip_list.csv` in sync when updating the list; the root copy remains the extension's offline fallback.
