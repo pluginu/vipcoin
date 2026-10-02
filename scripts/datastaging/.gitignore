@@ -1,0 +1,3 @@
+# Keep this local staging directory in Git, but never commit its datasets.
+*
+!.gitignore
