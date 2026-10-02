@@ -1,0 +1,32 @@
+::highlight(vip-coin-list-match) {
+  background: #ffe066;
+  color: #211900;
+  text-decoration: underline 2px #e5a600;
+}
+
+::highlight(vip-coin-custom-match) {
+  background: #8ce8ff;
+  color: #002632;
+  text-decoration: underline 2px #0e9abd;
+}
+
+[data-vip-coin-match] {
+  outline: 2px solid #f4bf19 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgb(244 191 25 / 18%) !important;
+}
+
+[data-vip-coin-match]::after {
+  content: "VIP";
+  position: absolute;
+  z-index: 2147483646;
+  top: 5px;
+  right: 5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #f4bf19;
+  color: #211900;
+  font: 700 10px/1.5 system-ui, sans-serif;
+  letter-spacing: .06em;
+  pointer-events: none;
+}

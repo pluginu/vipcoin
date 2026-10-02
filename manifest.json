@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "VIP Coin Highlighter",
+  "version": "1.0.0",
+  "description": "Highlight Pump.fun profiles that match your VIP list and custom watch words.",
+  "permissions": ["storage", "activeTab", "unlimitedStorage"],
+  "host_permissions": ["https://pump.fun/*", "https://*.pump.fun/*", "https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "VIP Coin Highlighter"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://pump.fun/*", "https://*.pump.fun/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["vip_list.csv"],
+      "matches": ["https://pump.fun/*", "https://*.pump.fun/*"]
+    }
+  ]
+}
