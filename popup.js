@@ -15,7 +15,7 @@ async function send(type, payload = {}) {
 }
 
 async function render() {
-  const stored = await chrome.storage.local.get(['enabled', 'customTerms', 'vipCsvUrl', 'vipCsvLastError']);
+  const stored = await chrome.storage.local.get(['enabled', 'customTerms', 'vipCsvLastError']);
   const settings = { ...DEFAULTS, ...stored };
   $('enabled').checked = settings.enabled;
   $('terms').replaceChildren(...settings.customTerms.map(term => {
@@ -33,7 +33,6 @@ async function render() {
     return li;
   }));
   $('empty').hidden = settings.customTerms.length > 0;
-  $('csv-url').value = stored.vipCsvUrl || '';
   const result = await send('VIP_STATUS').catch(() => null);
   $('matches').textContent = result?.matches ?? 0;
   $('vip-count').textContent = result?.vipCount?.toLocaleString?.() ?? '—';
@@ -52,15 +51,6 @@ $('add-form').onsubmit = async event => {
   $('term').value = '';
 };
 $('rescan').onclick = async () => { $('status').textContent = 'Rescanning…'; await send('VIP_RESCAN'); setTimeout(render, 250); };
-$('url-form').onsubmit = async event => {
-  event.preventDefault();
-  const value = $('csv-url').value.trim();
-  if (value && !/^https:\/\//i.test(value)) { $('status').textContent = 'Use a public HTTPS URL for the CSV.'; return; }
-  await chrome.storage.local.set({ vipCsvUrl: value, vipCsvFetchedAt: 0, vipCsvLastError: '' });
-  $('status').textContent = value ? 'Saved. Loading hosted VIP list…' : 'Hosted URL cleared. Using the bundled list.';
-  await send('VIP_RELOAD', { force: true });
-  setTimeout(render, 400);
-};
 $('refresh-list').onclick = async () => {
   $('status').textContent = 'Refreshing hosted VIP list…';
   const result = await send('VIP_RELOAD', { force: true });
@@ -75,7 +65,7 @@ $('csv-file').onchange = async event => {
     $('status').textContent = 'That CSV does not have the expected VIP List columns.';
     return;
   }
-  await chrome.storage.local.set({ vipCsvCache: text, vipCsvFetchedAt: Date.now(), vipCsvUrl: '', vipCsvLastError: '' });
+  await chrome.storage.local.set({ vipCsvCache: text, vipCsvFetchedAt: Date.now(), vipCsvLastError: '' });
   $('status').textContent = 'Local VIP list loaded. Rescanning…';
   await send('VIP_RELOAD', { force: false });
   setTimeout(render, 300);

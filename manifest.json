@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "VIP Coin Highlighter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Highlight Pump.fun profiles that match your VIP list and custom watch words.",
-  "permissions": ["storage", "activeTab", "unlimitedStorage"],
-  "host_permissions": ["https://pump.fun/*", "https://*.pump.fun/*", "https://*/*"],
+  "permissions": ["storage", "activeTab", "unlimitedStorage", "alarms"],
+  "host_permissions": ["https://pump.fun/*", "https://*.pump.fun/*", "https://pluginu.github.io/*"],
   "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "popup.html",
