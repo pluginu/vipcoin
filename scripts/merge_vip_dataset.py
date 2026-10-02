@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge new VIP records into the canonical CSV without overwriting existing rows.
+"""Append new VIP records without overwriting or removing existing rows.
 
 An X handle is a deliberately loose first-pass identifier.  Pump handles and Pump
 profile URLs are used as corroborating attributes so a reused/mistyped X handle
@@ -95,17 +95,6 @@ def inactive_identity(row: dict[str, str]) -> tuple[str, str] | tuple[str, ...]:
     return ("row", *row_signature(row))
 
 
-def supporting_identities(row: dict[str, str]) -> set[tuple[str, str]]:
-    identities = set()
-    pump_url = normalize_url(row.get("pump_profile_url", ""))
-    pump_handle = normalize_pump_handle(row.get("pump_handle", ""))
-    if pump_url:
-        identities.add(("pump_profile_url", pump_url))
-    if pump_handle:
-        identities.add(("pump_handle", pump_handle))
-    return identities
-
-
 def read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
@@ -142,13 +131,12 @@ def merge(
     inactive = list(inactive_rows or [])
     by_x: dict[str, list[dict[str, str]]] = {}
     for row in main_rows:
+        # Existing rows are immutable. Even incomplete legacy rows stay in place so
+        # a later import can never make the canonical dataset smaller.
+        merged.append(row)
         identity = x_identity(row)
         if identity:
-            merged.append(row)
             by_x.setdefault(identity, []).append(row)
-        else:
-            # Keep legacy incomplete profiles, but remove them from the runtime dataset.
-            inactive.append({field: (row.get(field) or "").strip() for field in EXPECTED_FIELDS})
 
     deduplicated_inactive = []
     inactive_keys = set()
@@ -162,10 +150,8 @@ def merge(
         "added": 0,
         "duplicate": 0,
         "conflict": 0,
-        "migrated_inactive": len(main_rows) - len(merged),
         "inactive_added": 0,
         "inactive_duplicate": 0,
-        "promoted": 0,
     }
     for line_number, row in enumerate(incoming_rows, start=2):
         identity = x_identity(row)
@@ -199,19 +185,8 @@ def merge(
         merged.append(clean_row)
         by_x[identity] = [clean_row]
         stats["added"] += 1
-        # A completed import promotes the matching Pump profile out of inactive storage.
-        incoming_support = supporting_identities(clean_row)
-        if incoming_support:
-            old_count = len(inactive)
-            inactive = [
-                candidate
-                for candidate in inactive
-                if not (supporting_identities(candidate) & incoming_support)
-            ]
-            promoted = old_count - len(inactive)
-            if promoted:
-                stats["promoted"] += promoted
-                inactive_keys = {inactive_identity(candidate) for candidate in inactive}
+        # Do not remove a matching inactive row. Imports are append-only, and an
+        # inactive historical record may contain useful data absent from this row.
     return merged, inactive, stats
 
 
@@ -251,10 +226,8 @@ def main() -> int:
             read_csv(inactive_path) if inactive_path.exists() else (list(EXPECTED_FIELDS), [])
         )
         merged, inactive, stats = merge(main_rows, incoming_rows, inactive_rows)
-        active_changed = bool(stats["added"] or stats["migrated_inactive"])
-        inactive_changed = bool(
-            stats["inactive_added"] or stats["migrated_inactive"] or stats["promoted"]
-        )
+        active_changed = bool(stats["added"])
+        inactive_changed = bool(stats["inactive_added"])
         if not args.dry_run and active_changed:
             write_csv_atomic(main_path, fields, merged)
             if web_copy:
@@ -271,8 +244,7 @@ def main() -> int:
     inactive_action = "would save" if args.dry_run else "saved"
     print(
         f"{action} {stats['added']} active record(s); {inactive_action} "
-        f"{stats['inactive_added']} inactive record(s); migrated {stats['migrated_inactive']} legacy "
-        f"inactive record(s); promoted {stats['promoted']} completed record(s); "
+        f"{stats['inactive_added']} inactive record(s); "
         f"ignored {stats['duplicate']} active duplicate(s) "
         f"and {stats['inactive_duplicate']} inactive duplicate(s); skipped {stats['conflict']} conflict(s)"
     )

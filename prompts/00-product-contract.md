@@ -121,8 +121,8 @@ Use only Python's standard library. The command accepts an incoming CSV and opti
 - Never overwrite an existing active record merely because a newer row differs.
 - Treat the same X identity as a duplicate unless both records have conflicting nonempty Pump handles or Pump profile URLs; report and skip conflicts.
 - Store records without an X identity in `vip_inactive.csv`, deduplicated by Pump URL, then Pump handle, then full row.
-- Migrate legacy incomplete rows out of the active file.
-- If a later complete record shares a Pump identity with an inactive record, promote it and remove the inactive copy.
+- Preserve all existing active and inactive rows; later imports must never overwrite or remove records.
+- If a later complete record shares a Pump identity with an inactive record, append it to the active file without removing the inactive history.
 - Write atomically. Synchronize `web/vip_list.csv` after active changes. A dry run writes nothing.
 - Exit nonzero on invalid input; use a distinct nonzero result when conflicts were skipped.
 - Include unit tests for normalization, new/duplicate/conflicting records, inactive deduplication/migration, and promotion.

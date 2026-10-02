@@ -47,14 +47,13 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(inactive, [inactive_record])
         self.assertEqual(stats["added"], 0)
 
-    def test_legacy_incomplete_active_record_is_migrated(self):
+    def test_legacy_incomplete_active_record_is_never_removed(self):
         incomplete = row(profile_name="Only Pump", pump_handle="only_pump")
         merged, inactive, stats = merge([incomplete], [])
-        self.assertEqual(merged, [])
-        self.assertEqual(inactive, [incomplete])
-        self.assertEqual(stats["migrated_inactive"], 1)
+        self.assertEqual(merged, [incomplete])
+        self.assertEqual(inactive, [])
 
-    def test_completed_record_is_promoted_out_of_inactive_store(self):
+    def test_completed_record_does_not_remove_inactive_history(self):
         incomplete = row(profile_name="Only Pump", pump_handle="only_pump")
         completed = row(
             profile_name="Only Pump",
@@ -64,9 +63,23 @@ class MergeTests(unittest.TestCase):
         )
         merged, inactive, stats = merge([], [completed], [incomplete])
         self.assertEqual(merged, [completed])
-        self.assertEqual(inactive, [])
+        self.assertEqual(inactive, [incomplete])
         self.assertEqual(stats["added"], 1)
-        self.assertEqual(stats["promoted"], 1)
+
+    def test_another_load_preserves_every_existing_record(self):
+        active = [
+            row(profile_name="Active", pump_handle="pump_a", x_handle="active"),
+            row(profile_name="Legacy", pump_handle="pump_legacy"),
+        ]
+        inactive = [row(profile_name="Inactive", pump_handle="pump_i")]
+        incoming = [row(profile_name="New", pump_handle="pump_n", x_handle="new")]
+
+        merged, retained_inactive, stats = merge(active, incoming, inactive)
+
+        self.assertEqual(merged[: len(active)], active)
+        self.assertEqual(retained_inactive, inactive)
+        self.assertEqual(len(merged), len(active) + 1)
+        self.assertEqual(stats["added"], 1)
 
     def test_inactive_profiles_deduplicate_by_pump_identity(self):
         old = row(pump_handle="only_pump", followers="100 followers")
