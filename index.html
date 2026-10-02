@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="VIP Coin is a fast, private Chrome extension that highlights VIP profiles and watch terms on any website you care about.">
+  <meta name="description" content="VIP Coin is a fast, private Chrome extension that helps you spot VIP profiles and watch terms on any website you care about.">
   <meta name="theme-color" content="#090c0b">
+  <link rel="icon" type="image/svg+xml" href="icons/vip.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/vip-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/vip-180.png">
   <title>VIP Coin — See the signal faster</title>
   <style>
     :root {
@@ -83,7 +86,7 @@
 <body>
   <header class="wrap">
     <nav aria-label="Main navigation">
-      <a class="brand" href="#top"><span class="coin">V</span>VIP Coin</a>
+      <a class="brand" href="#top"><img class="coin" src="icons/vip.svg" alt="VIP" width="32" height="32">VIP Coin</a>
       <div class="nav-links">
         <a href="#why">Why we built it</a>
         <a href="#how">How it works</a>
@@ -97,13 +100,13 @@
       <div>
         <div class="eyebrow">A faster way to spot who matters</div>
         <h1>See the signal before the scroll.</h1>
-        <p class="lede">VIP Coin is a lightweight Chrome extension that highlights watched VIP profiles and the terms you care about—right where you are already looking.</p>
+        <p class="lede">VIP Coin is a lightweight Chrome extension that helps you spot watched VIP profiles and the terms you care about—right where you are already looking.</p>
         <div class="actions">
           <a class="button primary" href="https://github.com/pluginu/vipcoin/archive/refs/heads/main.zip">Download the extension</a>
           <a class="button" href="#how">Install in minutes</a>
         </div>
       </div>
-      <div class="mockup" aria-label="Preview of a highlighted VIP profile">
+      <div class="mockup" aria-label="Preview of a watched VIP profile">
         <div class="browser-bar"><i></i><i></i><i></i></div>
         <div class="post">
           <div class="avatar"></div><div><strong>New profile</strong><p>Another launch moving through the feed...</p></div>
@@ -112,7 +115,7 @@
           <span class="tag">VIP</span><div class="avatar"></div><div><strong><mark>Watched profile</mark></strong><p>A name you care about is active now.</p></div>
         </div>
         <div class="post">
-          <div class="avatar"></div><div><strong>Market update</strong><p>Custom keyword rules are highlighted in blue.</p></div>
+          <div class="avatar"></div><div><strong>Market update</strong><p>Custom keyword matches appear in blue.</p></div>
         </div>
       </div>
     </div>
@@ -130,7 +133,7 @@
         <h2>Less hunting. More recognizing.</h2>
         <p class="section-copy">VIP Coin turns a crowded page into a readable watchlist without sending your personal terms anywhere.</p>
         <div class="grid">
-          <article class="card"><span class="number">01 / WATCH</span><h3>Spot VIP profiles</h3><p>Known names, handles, and profile links receive a clear yellow highlight and VIP outline.</p></article>
+          <article class="card"><span class="number">01 / WATCH</span><h3>Spot VIP profiles</h3><p>Known names, handles, and profile links stand out in yellow with a VIP outline.</p></article>
           <article class="card"><span class="number">02 / CUSTOMIZE</span><h3>Add your own signals</h3><p>Track any name, phrase, or word. Your personal matches appear in blue and stay in your browser.</p></article>
           <article class="card"><span class="number">03 / KEEP UP</span><h3>Works as the page moves</h3><p>Newly loaded content is scanned automatically, so matches appear without a manual page refresh.</p></article>
         </div>
@@ -145,7 +148,7 @@
             <li><div><strong>Download and unzip</strong><span>Get the project from GitHub and keep the folder somewhere convenient.</span></div></li>
             <li><div><strong>Open Chrome extensions</strong><span>Visit <code>chrome://extensions</code> and turn on Developer mode.</span></div></li>
             <li><div><strong>Load the folder</strong><span>Choose “Load unpacked,” select the project folder, turn on the extension’s toggle, then refresh the website you want to scan.</span></div></li>
-            <li><div><strong>Make it yours</strong><span>Open VIP Coin to pause highlighting or add exact, contains, starts-with, ends-with, and regex keyword rules.</span></div></li>
+            <li><div><strong>Make it yours</strong><span>Open VIP Coin to pause detection or add exact, contains, starts-with, ends-with, and regex keyword rules.</span></div></li>
           </ol>
         </div>
       </div>

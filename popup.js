@@ -16,7 +16,7 @@ async function activeTab() {
 
 async function send(type, payload = {}) {
   const tab = await activeTab();
-  if (!tab?.id || !/^https?:\/\//i.test(tab.url || '')) return { ok: false, error: 'Open a website to use highlighting. Browser internal pages are not supported.' };
+  if (!tab?.id || !/^https?:\/\//i.test(tab.url || '')) return { ok: false, error: 'Open a website to use VIP Coin. Browser internal pages are not supported.' };
   return chrome.tabs.sendMessage(tab.id, { type, ...payload });
 }
 
@@ -66,13 +66,37 @@ function renderRules() {
   }));
 }
 
+function renderProgress(download, page) {
+  const current = ['downloading', 'loading', 'error'].includes(download?.stage) ? download : page || download;
+  if (!current) return;
+  const stages = ['downloading', 'loading', 'indexing', 'ready'];
+  const step = stages.indexOf(current.stage);
+  let percent = current.percent;
+  let value = percent == null ? '' : `${percent}%`;
+  if (current.stage === 'downloading') {
+    percent = current.total > 0 ? Math.min(49, current.received / current.total * 49) : null;
+    value = current.received ? `${(current.received / 1024).toFixed(0)} KB${current.total ? ` / ${(current.total / 1024).toFixed(0)} KB` : ''}` : '';
+  }
+  if (current.stage === 'ready') percent = 100;
+  $('progress-label').textContent = current.detail;
+  $('progress-value').textContent = value;
+  if (percent == null) $('load-progress').removeAttribute('value');
+  else $('load-progress').value = percent;
+  document.querySelector('.load-progress').classList.toggle('failed', current.stage === 'error');
+  document.querySelectorAll('[data-step]').forEach((element, index) => {
+    element.classList.toggle('active', index === step);
+    element.classList.toggle('complete', index < step);
+  });
+}
+
 async function renderStatus() {
-  const stored = await chrome.storage.local.get('vipCsvLastError');
+  const stored = await chrome.storage.local.get(['vipCsvLastError', 'vipDownloadProgress']);
   const result = await send('VIP_STATUS').catch(() => null);
+  renderProgress(stored.vipDownloadProgress, result?.progress);
   $('matches').textContent = result?.matches ?? 0;
   $('vip-count').textContent = result?.vipCount?.toLocaleString?.() ?? '—';
   const warning = stored.vipCsvLastError ? ` Hosted-list warning: ${stored.vipCsvLastError}` : '';
-  $('status').textContent = (!settings.enabled ? 'Highlighting is paused. Turn on the toggle to resume.' : result?.error || result?.message || (result?.ok ? 'Watching this page for new matches.' : 'Refresh this page after installing and turning on the extension.')) + warning;
+  $('status').textContent = (!settings.enabled ? 'VIP Coin is paused. Turn on the toggle to resume.' : result?.error || result?.message || (result?.ok ? 'Watching this page for new matches.' : 'Refresh this page after installing and turning on the extension.')) + warning;
 }
 
 function showHint() { $('match-hint').textContent = HINTS[$('mode').value]; }
@@ -99,5 +123,5 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 loadSettings().then(() => {
-  renderRules(); showHint(); renderStatus(); setInterval(renderStatus, 1200);
+  renderRules(); showHint(); renderStatus(); setInterval(renderStatus, 250);
 }).catch(error => { $('rule-error').textContent = error.message; });

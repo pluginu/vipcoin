@@ -34,3 +34,19 @@ li button{padding:2px 6px;background:transparent;color:#8d9995;font-size:17px}
 #rule-error{min-height:0;margin:0;color:#ff8f8f;font-size:11px}
 #rule-error:empty{display:none}
 #rule-count{color:#8f9b97;font-size:11px}
+
+.popup-brand{display:flex;align-items:center;gap:10px}
+.popup-brand img{display:block;flex-shrink:0}
+
+.load-progress{margin:12px 0;padding:11px;border:1px solid #29322f;border-radius:10px;background:#151b19}
+.progress-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px}
+#progress-label{font-weight:500;color:#cbd5d0}
+#progress-value{color:#ffe066;white-space:nowrap;font-size:10px}
+#load-progress{display:block;width:100%;height:6px;margin:10px 0;accent-color:#e4b916;border:0;border-radius:99px;overflow:hidden;background:#29322f}
+#load-progress::-webkit-progress-bar{background:#29322f;border-radius:99px}
+#load-progress::-webkit-progress-value{background:#e4b916;border-radius:99px;transition:width .15s}
+.progress-steps{display:flex;justify-content:space-between;list-style:none;padding:0;margin:0}
+.progress-steps li{display:block;padding:0;background:none;font-size:10px;color:#68736f}
+.progress-steps li.active{color:#ffe066}
+.progress-steps li.complete{color:#b4c4bc}
+.load-progress.failed #progress-label{color:#ff8f8f}

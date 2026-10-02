@@ -3,25 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>VIP Coin Highlighter</title>
+  <title>VIP Coin</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <header>
-    <div><span class="eyebrow">WEBSITE WATCHLIST</span><h1>VIP Coin</h1></div>
-    <label class="toggle"><input id="enabled" type="checkbox" aria-label="Enable highlighting on all websites"><span></span></label>
+    <div class="popup-brand"><img src="icons/vip.svg" alt="VIP" width="36" height="36"><div><span class="eyebrow">WEBSITE WATCHLIST</span><h1>VIP Coin</h1></div></div>
+    <label class="toggle"><input id="enabled" type="checkbox" aria-label="Enable VIP Coin on all websites"><span></span></label>
   </header>
 
   <section class="status-card">
     <div><strong id="matches">0</strong><span>matches on page</span></div>
     <div><strong id="vip-count">—</strong><span>VIP profiles loaded</span></div>
   </section>
-  <p class="hint">After installing, turn on the toggle and refresh the page. Highlighting works on any website.</p>
+  <p class="hint">After installing, turn on the toggle and refresh the page. VIP Coin works on any website.</p>
+  <section class="load-progress" aria-label="VIP list progress">
+    <div class="progress-heading"><strong id="progress-label" role="status">Loading VIP list…</strong><span id="progress-value"></span></div>
+    <progress id="load-progress" max="100" aria-label="VIP list loading progress"></progress>
+    <ol class="progress-steps"><li data-step="downloading">Download</li><li data-step="loading">Load</li><li data-step="indexing">Index</li><li data-step="ready">Ready</li></ol>
+  </section>
   <p id="status" role="status">Refresh this page after installing and turning on the extension.</p>
 
   <section>
     <h2>Custom keyword matching <span id="rule-count">0</span></h2>
-    <p class="hint">Custom rules are highlighted in blue and stay in this browser.</p>
+    <p class="hint">Custom matches appear in blue and stay in this browser.</p>
     <form id="rule-form">
       <input id="term" maxlength="500" autocomplete="off" required placeholder="Name, phrase, or pattern" aria-label="Keyword or expression">
       <select id="mode" aria-label="Match type">

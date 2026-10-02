@@ -16,6 +16,8 @@
   let scanning = false;
   let scanAgain = false;
   let totalMatches = 0;
+  let progress = { stage: 'loading', detail: 'Loading VIP list…', percent: null };
+  const yieldToPage = () => new Promise(resolve => setTimeout(resolve, 0));
   let status = { matches: 0, vipCount: 0, message: 'Loading VIP list…' };
 
   function parseCSV(text) {
@@ -41,7 +43,8 @@
 
   // A character trie rejects non-matching first letters immediately. Matching cost
   // follows the page text, rather than multiplying every node by every VIP record.
-  function makeTrie(terms) {
+  async function makeTrie(terms) {
+    let processed = 0;
     const root = new Map();
     for (const term of terms) {
       let node = root;
@@ -50,6 +53,10 @@
         node = node.get(char);
       }
       node.terminal = true;
+      if (++processed % 500 === 0) {
+        progress = { stage: 'indexing', detail: `Building search index: ${processed.toLocaleString()} / ${terms.size.toLocaleString()} terms`, percent: 75 + Math.round(processed / terms.size * 24) };
+        await yieldToPage();
+      }
     }
     return root;
   }
@@ -67,15 +74,23 @@
     });
   }
 
-  function makeVipIndex(csv) {
+  async function makeVipIndex(csv) {
+    progress = { stage: 'loading', detail: 'Reading VIP file…', percent: 50 };
+    await yieldToPage();
     const rows = parseCSV(csv);
     const headers = rows.shift()?.map(x => x.trim()) || [];
     const columns = Object.fromEntries(headers.map((name, i) => [name, i]));
     const terms = new Set(), urls = new Set();
     let count = 0;
+    progress = { stage: 'indexing', detail: 'Indexing VIP profiles…', percent: 55 };
+    await yieldToPage();
     for (const row of rows) {
       if (!row.some(Boolean)) continue;
       count++;
+      if (count % 250 === 0) {
+        progress = { stage: 'indexing', detail: `Indexing profiles: ${count.toLocaleString()} / ${rows.length.toLocaleString()}`, percent: 55 + Math.round(count / rows.length * 20) };
+        await yieldToPage();
+      }
       for (const field of ['profile_name', 'pump_handle', 'x_handle']) {
         const term = normalize(row[columns[field]]);
         if (term.length >= 3) terms.add(term);
@@ -91,14 +106,16 @@
         } catch {}
       }
     }
-    return { trie: makeTrie(terms), urls, count };
+    return { trie: await makeTrie(terms), urls, count };
   }
 
   async function loadVip(force = false) {
+    progress = { stage: 'loading', detail: 'Loading saved list or waiting for download…', percent: null };
     const remote = await chrome.runtime.sendMessage({ type: 'VIP_FETCH_REMOTE', force });
     if (!remote?.ok) throw new Error(remote?.error || 'Could not load the VIP list.');
     const csv = remote.csv || await fetch(chrome.runtime.getURL('vip_list.csv')).then(r => r.text());
-    vip = makeVipIndex(csv);
+    vip = await makeVipIndex(csv);
+    progress = { stage: 'ready', detail: `${vip.count.toLocaleString()} VIP profiles ready`, percent: 100 };
     status.vipCount = vip.count;
     status.message = remote.warning ? `Using cached VIP list: ${remote.warning}` : `VIP list loaded from ${remote.source}.`;
   }
@@ -217,7 +234,7 @@
     scanning = true; scanAgain = false;
     try {
       if (full) { resetHighlights(); pendingRoots = new Set([document.body]); }
-      if (!settings.enabled) { resetHighlights(); pendingRoots.clear(); status = { matches: 0, vipCount: vip.count, message: 'Highlighting is paused.' }; return; }
+      if (!settings.enabled) { resetHighlights(); pendingRoots.clear(); status = { matches: 0, vipCount: vip.count, message: 'VIP Coin is paused.' }; return; }
       const roots = [...pendingRoots]; pendingRoots.clear();
       let scanned = 0, limited = false;
       for (const root of roots) {
@@ -282,7 +299,7 @@
   });
 
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
-    if (message.type === 'VIP_STATUS') respond({ ok: true, ...status });
+    if (message.type === 'VIP_STATUS') respond({ ok: true, ...status, progress });
     else if (message.type === 'VIP_RELOAD') {
       loadVip(message.force === true).then(() => {
         schedule(0, true); respond({ ok: true, source: 'hosted URL' });
@@ -309,5 +326,5 @@
   }, { passive: true, capture: true });
   setInterval(queueVisibleCards, 2000);
 
-  initialize().catch(error => { status = { ...status, error: error.message }; });
+  initialize().catch(error => { progress = { stage: 'error', detail: error.message, percent: null }; status = { ...status, error: error.message }; });
 })();
