@@ -71,6 +71,9 @@
     button.button { color: var(--ink); cursor: pointer; }
     footer { display: flex; justify-content: space-between; gap: 24px; padding: 34px 0 55px; color: #77817c; font-size: 13px; }
     footer p { margin: 0; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer-links a { text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); }
     @media (max-width: 780px) {
       .nav-links a:not(.button) { display: none; }
       .hero, .story { grid-template-columns: 1fr; gap: 45px; }
@@ -169,7 +172,10 @@
 
   <footer class="wrap">
     <p>VIP Coin is an independent open-source utility and is not affiliated with Pump.fun.</p>
-    <p>Built for faster recognition—not financial advice.</p>
+    <div class="footer-links">
+      <a href="https://github.com/pluginu/vipcoin" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://x.com/thechief158" target="_blank" rel="noopener noreferrer">Created by @thechief158</a>
+    </div>
   </footer>
   <script>
     const dataUrl = new URL('web/vip_list.csv', location.href).href;
