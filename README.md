@@ -29,3 +29,13 @@ https://pluginu.github.io/vipcoin/web/vip_list.csv
 ```
 
 The URL is built into the extension; no popup setup is needed. Keep `vip_list.csv` and `web/vip_list.csv` in sync when updating the list; the root copy remains the extension's offline fallback.
+
+## Merge new records
+
+Use the merge helper with another CSV that has the same columns:
+
+```bash
+python3 scripts/merge_vip_dataset.py path/to/new_records.csv
+```
+
+The script uses a case-insensitive `x_handle` (or the handle in `x_url`) as a loose identifier. New handles are appended to `vip_list.csv` and the web copy is synchronized. Existing handles are left unchanged. If an existing X handle has a different non-empty Pump handle or Pump profile URL, the row is reported as a conflict and skipped. Rows without an X handle are retained in the separate `vip_inactive.csv` file and are not downloaded or indexed by the extension, so they do not affect production performance. Legacy incomplete rows are migrated there automatically. If a later import supplies X data for the same Pump profile, the completed row is promoted to the active list and removed from the inactive file. Preview the result without writing files with `--dry-run`.
