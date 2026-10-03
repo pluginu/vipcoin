@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-const DEFAULTS = { enabled: true, customRules: [], trackSeenPosts: false };
+const DEFAULTS = { enabled: true, customRules: [], trackSeenPosts: false, recordProfiles: false, enrichProfiles: false };
 const SEEN_POST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const HINTS = {
   exact: 'Matches a whole word or phrase: “Ann” will not match “Anna”.',
@@ -34,13 +34,22 @@ function validateRule(rule) {
 }
 
 async function loadSettings() {
-  const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts']);
+  const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts', 'recordProfiles', 'enrichProfiles']);
   if (!Array.isArray(stored.customRules) && Array.isArray(stored.customTerms)) {
     stored.customRules = stored.customTerms.map(value => ({ id: crypto.randomUUID(), value, mode: 'contains', caseSensitive: false, enabled: true }));
     await chrome.storage.local.set({ customRules: stored.customRules });
     await chrome.storage.local.remove('customTerms');
   }
   settings = { ...DEFAULTS, ...stored, customRules: stored.customRules || [] };
+}
+
+async function renderProfiles() {
+  const { recordedProfiles = {} } = await chrome.storage.local.get('recordedProfiles');
+  $('record-profiles').checked = settings.recordProfiles;
+  $('enrich-profiles').checked = settings.enrichProfiles;
+  $('enrich-profiles').disabled = !settings.recordProfiles;
+  document.querySelector('.sub-setting').classList.toggle('disabled', !settings.recordProfiles);
+  $('profile-count').textContent = Object.keys(recordedProfiles).length.toLocaleString();
 }
 
 async function renderSeenPosts() {
@@ -114,6 +123,20 @@ $('track-seen-posts').onchange = async event => {
   settings.trackSeenPosts = event.target.checked;
   await chrome.storage.local.set({ trackSeenPosts: settings.trackSeenPosts });
 };
+$('record-profiles').onchange = async event => {
+  settings.recordProfiles = event.target.checked;
+  if (!settings.recordProfiles) settings.enrichProfiles = false;
+  await chrome.storage.local.set({ recordProfiles: settings.recordProfiles, enrichProfiles: settings.enrichProfiles });
+  renderProfiles();
+};
+$('enrich-profiles').onchange = async event => {
+  settings.enrichProfiles = settings.recordProfiles && event.target.checked;
+  await chrome.storage.local.set({ enrichProfiles: settings.enrichProfiles });
+};
+$('clear-profiles').onclick = async () => {
+  await chrome.storage.local.set({ recordedProfiles: {} });
+  await renderProfiles();
+};
 $('clear-seen').onclick = async () => {
   await chrome.storage.local.set({ seenPosts: {} });
   await renderSeenPosts();
@@ -136,9 +159,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.enabled) settings.enabled = changes.enabled.newValue;
   if (changes.customRules) settings.customRules = changes.customRules.newValue || [];
   if (changes.trackSeenPosts) settings.trackSeenPosts = changes.trackSeenPosts.newValue === true;
-  renderRules(); renderSeenPosts(); renderStatus();
+  if (changes.recordProfiles) settings.recordProfiles = changes.recordProfiles.newValue === true;
+  if (changes.enrichProfiles) settings.enrichProfiles = changes.enrichProfiles.newValue === true;
+  renderRules(); renderSeenPosts(); renderProfiles(); renderStatus();
 });
 
 loadSettings().then(() => {
-  renderRules(); renderSeenPosts(); showHint(); renderStatus(); setInterval(renderStatus, 250);
+  renderRules(); renderSeenPosts(); renderProfiles(); showHint(); renderStatus(); setInterval(renderStatus, 250);
 }).catch(error => { $('rule-error').textContent = error.message; });

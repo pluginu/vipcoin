@@ -6,8 +6,12 @@
   const SKIP_SELECTOR = 'script,style,noscript,textarea,input,select,option,[contenteditable="true"],[hidden],[aria-hidden="true"]';
   const SEEN_POST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
   const MAX_SEEN_POSTS = 25000;
+  const MAX_RECORDED_PROFILES = 10000;
+  const MAX_ENRICHMENT_LINKS = 3;
+  const PROFILE_PATH = /\/(?:profile|profiles|user|users|u)\/([^/?#]+)/i;
+  const ENRICHMENT_WORDS = /\b(?:created|creation|origin|details?|about|joined)\b/i;
   const POST_PATHS = [/\/status\/[^/]+/i, /\/(?:p|reel|reels|tv)\/[^/]+/i, /\/comments\/[^/]+/i, /\/posts\/[^/]+/i, /\/permalink\/[^/]+/i, /\/coin\/[^/]+/i];
-  let settings = { enabled: true, customRules: [], trackSeenPosts: false };
+  let settings = { enabled: true, customRules: [], trackSeenPosts: false, recordProfiles: false, enrichProfiles: false };
   let vip = { trie: new Map(), urls: new Set(), count: 0 };
   let customMatchers = [];
   let vipHighlight = new Highlight();
@@ -26,6 +30,9 @@
   let pendingSeenPosts = {};
   let seenWriteTimer = null;
   let activePagePostId = '';
+  let activeProfileUrl = '';
+  let profileTimer = null;
+  const enrichedThisSession = new Set();
   const sessionPagePosts = new Set();
   let progress = { stage: 'loading', detail: 'Loading VIP list…', percent: null };
   const yieldToPage = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -50,6 +57,71 @@
 
   function normalize(value) {
     return String(value || '').trim().replace(/^@/, '').toLocaleLowerCase();
+  }
+
+  function profileIdentity(value = location.href) {
+    try {
+      const url = new URL(value, location.href);
+      const match = url.pathname.match(PROFILE_PATH);
+      if (!match || !/^https?:$/.test(url.protocol)) return null;
+      url.search = ''; url.hash = '';
+      return { id: `${url.hostname.toLocaleLowerCase()}${url.pathname.replace(/\/$/, '').toLocaleLowerCase()}`, url: url.href.replace(/\/$/, ''), handle: decodeURIComponent(match[1]) };
+    } catch { return null; }
+  }
+
+  function textOf(selector, root = document) {
+    return root.querySelector(selector)?.textContent?.trim().replace(/\s+/g, ' ').slice(0, 500) || '';
+  }
+
+  function profileSnapshot(identity) {
+    const socialUrls = [...document.querySelectorAll('a[href]')].map(a => a.href).filter(href => /^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com|instagram\.com|tiktok\.com|youtube\.com)\//i.test(href)).slice(0, 20);
+    const title = textOf('h1') || document.querySelector('meta[property="og:title"]')?.content?.trim() || document.title;
+    const description = document.querySelector('meta[name="description"]')?.content?.trim() || document.querySelector('meta[property="og:description"]')?.content?.trim() || textOf('[class*="bio" i], [data-testid*="bio" i]');
+    return { id: identity.id, url: identity.url, host: location.hostname, handle: identity.handle, title: title.slice(0, 300), description: description.slice(0, 1000), socialUrls: [...new Set(socialUrls)], firstVisitedAt: Date.now(), lastVisitedAt: Date.now(), visits: 1 };
+  }
+
+  async function enrichProfile(identity) {
+    if (!settings.enrichProfiles || enrichedThisSession.has(identity.id)) return [];
+    enrichedThisSession.add(identity.id);
+    const links = [...document.querySelectorAll('a[href]')].flatMap(anchor => {
+      try {
+        const url = new URL(anchor.href, location.href);
+        const label = `${anchor.textContent || ''} ${anchor.getAttribute('aria-label') || ''} ${url.pathname}`;
+        return url.origin === location.origin && url.href !== identity.url && ENRICHMENT_WORDS.test(label) ? [url.href] : [];
+      } catch { return []; }
+    });
+    const selected = [...new Set(links)].slice(0, MAX_ENRICHMENT_LINKS), details = [];
+    for (const url of selected) {
+      try {
+        const response = await fetch(url, { credentials: 'include', signal: AbortSignal.timeout(8000) });
+        if (!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) continue;
+        const html = await response.text();
+        if (html.length > 2_000_000) continue;
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        details.push({ url, title: (page.querySelector('meta[property="og:title"]')?.content || page.title || '').trim().slice(0, 300), description: (page.querySelector('meta[name="description"]')?.content || page.querySelector('meta[property="og:description"]')?.content || '').trim().slice(0, 1000) });
+      } catch {}
+    }
+    return details;
+  }
+
+  async function recordCurrentProfile() {
+    if (!settings.recordProfiles) return;
+    const identity = profileIdentity();
+    if (!identity) return;
+    const snapshot = profileSnapshot(identity);
+    const enrichment = await enrichProfile(identity);
+    const { recordedProfiles = {} } = await chrome.storage.local.get('recordedProfiles');
+    const previous = recordedProfiles[identity.id];
+    recordedProfiles[identity.id] = { ...previous, ...snapshot, firstVisitedAt: previous?.firstVisitedAt || snapshot.firstVisitedAt, visits: (previous?.visits || 0) + (activeProfileUrl === identity.url ? 0 : 1), enrichment: enrichment.length ? enrichment : previous?.enrichment || [], enrichedAt: enrichment.length ? Date.now() : previous?.enrichedAt || null };
+    activeProfileUrl = identity.url;
+    const bounded = Object.fromEntries(Object.entries(recordedProfiles).sort((a, b) => Number(b[1].lastVisitedAt) - Number(a[1].lastVisitedAt)).slice(0, MAX_RECORDED_PROFILES));
+    await chrome.storage.local.set({ recordedProfiles: bounded });
+  }
+
+  function scheduleProfileRecord(delay = 700) {
+    if (!settings.recordProfiles) return;
+    clearTimeout(profileTimer);
+    profileTimer = setTimeout(() => recordCurrentProfile().catch(console.error), delay);
   }
 
   function postIdFromURL(value) {
@@ -344,6 +416,7 @@
 
   function queueVisibleCards() {
     trackCurrentPage();
+    if (profileIdentity()?.url !== activeProfileUrl) scheduleProfileRecord();
     if (!settings.enabled && !settings.trackSeenPosts) return;
     const height = window.innerHeight, width = window.innerWidth;
     for (const card of document.querySelectorAll(CARD_SELECTOR)) {
@@ -354,7 +427,7 @@
   }
 
   async function initialize() {
-    const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts', 'seenPosts']);
+    const stored = await chrome.storage.local.get(['enabled', 'customRules', 'customTerms', 'trackSeenPosts', 'seenPosts', 'recordProfiles', 'enrichProfiles']);
     if (!Array.isArray(stored.customRules) && Array.isArray(stored.customTerms)) {
       stored.customRules = stored.customTerms.map((value, index) => ({ id: `migrated-${index}`, value, mode: 'contains', caseSensitive: false, enabled: true }));
       await chrome.storage.local.set({ customRules: stored.customRules });
@@ -368,6 +441,7 @@
     customMatchers = compileCustomRules(settings.customRules);
     await loadVip();
     trackCurrentPage();
+    scheduleProfileRecord();
     schedule(0, true);
   }
 
@@ -382,6 +456,16 @@
       settings.trackSeenPosts = changes.trackSeenPosts.newValue === true;
       if (!settings.trackSeenPosts) { activePagePostId = ''; clearSeenMarks(); }
       else { trackCurrentPage(); pendingRoots.add(document.body); }
+    }
+    if (changes.recordProfiles) {
+      settings.recordProfiles = changes.recordProfiles.newValue === true;
+      if (!settings.recordProfiles) { clearTimeout(profileTimer); activeProfileUrl = ''; }
+      else scheduleProfileRecord(0);
+    }
+    if (changes.enrichProfiles) {
+      settings.enrichProfiles = changes.enrichProfiles.newValue === true;
+      const identity = profileIdentity();
+      if (settings.enrichProfiles) { if (identity) enrichedThisSession.delete(identity.id); scheduleProfileRecord(0); }
     }
     if (changes.seenPosts) {
       seenPosts = changes.seenPosts.newValue || {};
@@ -413,6 +497,7 @@
       else mutation.addedNodes.forEach(node => pendingRoots.add(node));
     }
     if (pendingRoots.size) schedule();
+    scheduleProfileRecord();
   }).observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['href'] });
 
   // Virtualized feeds may recycle existing cards without inserting a new subtree.

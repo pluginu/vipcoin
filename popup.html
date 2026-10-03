@@ -29,6 +29,12 @@
     <div class="seen-summary"><span><strong id="seen-count">0</strong> posts remembered</span><button id="clear-seen" type="button" class="secondary">Clear history</button></div>
   </section>
 
+  <section class="profile-settings">
+    <div class="setting-heading"><div><h2>Profile recorder</h2><p class="hint">Passively save profiles you visit in this browser.</p></div><label class="toggle"><input id="record-profiles" type="checkbox" aria-label="Passively record visited profiles"><span></span></label></div>
+    <label class="sub-setting"><span><strong>Active enrichment</strong><small>Fetch up to 3 useful same-site detail pages, such as created or origin links.</small></span><span class="toggle"><input id="enrich-profiles" type="checkbox" aria-label="Actively enrich recorded profiles"><span></span></span></label>
+    <div class="seen-summary"><span><strong id="profile-count">0</strong> profiles recorded</span><button id="clear-profiles" type="button" class="secondary">Clear profiles</button></div>
+  </section>
+
   <section>
     <h2>Custom keyword matching <span id="rule-count">0</span></h2>
     <p class="hint">Custom matches appear in blue and stay in this browser.</p>

@@ -18,6 +18,8 @@ VIP list matches use a crypto-green highlight and custom-rule matches are blue. 
 
 The optional **Seen-post protection** toggle remembers recognized post permalinks locally and displays a red warning when the same post appears again. Entries expire automatically after seven days, and **Clear history** deletes them immediately. The tracker recognizes common post URL formats used by Pump.fun, X, Instagram, Reddit, and other sites with post or permalink paths.
 
+The optional **Profile recorder** passively saves profiles you visit to local extension storage, including the profile URL, handle, visible title/description, social links, visit count, and timestamps. **Active enrichment** can additionally fetch up to three relevant same-origin detail pages linked with labels such as created, origin, details, about, or joined. It never changes the active tab, never follows off-site links, deduplicates work per session, and caps the archive at the 10,000 most recently visited profiles. Both features are off by default, and **Clear profiles** deletes the archive.
+
 ## GitHub Pages
 
 The project site lives in `index.html` and can be published directly from the repository root with GitHub Pages. A web-accessible copy of the dataset lives at `web/vip_list.csv`.
